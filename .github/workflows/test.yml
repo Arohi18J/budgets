@@ -1,0 +1,51 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  ##### N.B Uncomment below lines to test if needed for current pull request, otherwise leave
+  ##### for now to avoid unexpected billing charges and only run on merge to dev/main ;) 
+  # pull_request:
+  #   types: [opened, synchronize]
+
+jobs:
+  default-shell:
+    name: Default shell
+    runs-on: "ubuntu-latest"
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: finance-app
+          environment-file: env.yml
+          auto-activate-base: false
+          # use-mamba: true
+          # miniforge-variant: Mambaforge
+          # channels: conda-forge
+
+      - name: Activate conda environment
+        run: |
+          conda info
+          conda list
+          conda activate finance-app
+          # cd budgetools
+          # pip install -e .
+      
+      - name: Sort imports with isort
+        run: | 
+          isort --profile 'black' --filter-files .
+
+      - name: Code formatting/linting with black/flake8
+        run: | 
+          black . 
+          flake8
+
+      - name: Test with pytest
+        run: |
+          pytest -vv
